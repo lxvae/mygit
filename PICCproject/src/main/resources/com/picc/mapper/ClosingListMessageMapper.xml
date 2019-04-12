@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.picc.dao.ClosingListMessageMapper">
+	<select id="getClosingCountMessageList"   
+		resultType="com.picc.entity.ClosingListMessage" parameterType="com.picc.entity.ClosingListSummarySearchMessage">
+ SELECT  my_case_type as myCaseType ,
+ SUM(CASE WHEN DATE_FORMAT(b.closing_time, '%Y')=#{year} 
+<if test="month != null">
+ and  DATE_FORMAT(b.closing_time, '%m')=#{month}
+ </if> 
+  THEN 1 ELSE 0 END) as totalCount,
+SUM(CASE WHEN DATE_FORMAT(b.closing_time, '%Y')=#{year} 
+<if test="month != null">
+ and  DATE_FORMAT(b.closing_time, '%m')=#{month}
+ </if> 
+ THEN b.amount_of_money ELSE 0 END) as sumMoney,
+SUM(CASE WHEN DATE_FORMAT(b.closing_time, '%Y')=#{year} 
+<if test="month != null">
+ and  DATE_FORMAT(b.closing_time, '%m')=#{month}
+ </if> 
+ AND b.amount_of_money &lt;=${moneyType} THEN 1 ELSE 0 END) as nowCount,
+SUM(CASE WHEN DATE_FORMAT(b.risk_time, '%Y')=#{year} AND DATE_FORMAT(b.closing_time, '%Y')=#{year}
+<if test="month != null">
+ and  DATE_FORMAT(b.closing_time, '%m')=#{month}
+ </if> 
+  AND b.amount_of_money &lt;=${moneyType} THEN 1 ELSE 0 END )as countYear,
+SUM(CASE WHEN DATE_FORMAT(b.risk_time, '%Y')=#{year} AND DATE_FORMAT(b.closing_time, '%Y')=#{year}
+<if test="month != null">
+ and  DATE_FORMAT(b.closing_time, '%m')=#{month}
+ </if> 
+  AND b.amount_of_money &lt;=${moneyType} THEN b.amount_of_money ELSE 0 END )as moneyCount,
+SUM(CASE WHEN DATE_FORMAT(b.risk_time, '%Y')=#{year} AND DATE_FORMAT(b.risk_time, '%m')=DATE_FORMAT(b.closing_time, '%m') AND DATE_FORMAT(b.closing_time, '%Y')=#{year} 
+<if test="month != null">
+ and  DATE_FORMAT(b.risk_time, '%m')=#{month} and DATE_FORMAT(b.closing_time, '%m')=#{month}
+ </if> 
+ AND b.amount_of_money &lt;=${moneyType}  THEN 1 ELSE 0 END)as countMonth,
+SUM(CASE WHEN DATE_FORMAT(b.risk_time, '%Y')=#{year} AND DATE_FORMAT(b.risk_time, '%m')=DATE_FORMAT(b.closing_time, '%m') AND DATE_FORMAT(b.closing_time, '%Y')=#{year} 
+<if test="month != null">
+ and  DATE_FORMAT(b.risk_time, '%m')=#{month} and DATE_FORMAT(b.closing_time, '%m')=#{month}
+ </if> 
+ AND b.amount_of_money &lt;=${moneyType} THEN b.amount_of_money ELSE 0 END)as moneyMonth,
+SUM(CASE WHEN DATE_FORMAT(b.risk_time, '%Y')=#{year}AND DATE_FORMAT(b.closing_time, '%Y')=#{year} 
+<if test="month != null">
+ and  DATE_FORMAT(b.closing_time, '%m')=#{month}
+ </if> 
+AND b.amount_of_money &lt;=${moneyType}  THEN 1 ELSE 0 END) as countYearMonth,
+SUM(CASE WHEN DATE_FORMAT(b.risk_time, '%Y')=#{year}AND DATE_FORMAT(b.closing_time, '%Y')=#{year} 
+<if test="month != null">
+ and  DATE_FORMAT(b.closing_time, '%m')=#{month}
+ </if> 
+ AND b.amount_of_money &lt;=${moneyType} THEN b.amount_of_money ELSE 0 END) as  moneyYearMonth
+FROM USER AS a INNER JOIN (SELECT  *,(CASE 
+	WHEN case_type LIKE 'T%' THEN 'T' 
+	ELSE case_type END) AS my_case_type FROM closing_list_table) AS b ON b.prospector_code=a.username 
+GROUP BY my_case_type ORDER BY my_case_type DESC;
+	</select>
+	<select id="getClosingListYear" resultType="String">
+		select DISTINCT DATE_FORMAT(risk_time, '%Y' ) as year from closing_list_table ORDER BY year DESC
+	</select>
+
+	<select id="exportClosingList" resultType="com.picc.entity.ClosingListMessage" parameterType="com.picc.entity.ClosingListSummarySearchMessage" >
+SELECT  
+ SUM(CASE WHEN DATE_FORMAT(b.closing_time, '%Y')=#{year} 
+<if test="month != null">
+ and  DATE_FORMAT(b.closing_time, '%m')=#{month}
+ </if> 
+  THEN 1 ELSE 0 END) as totalCount,
+  b.surveyor AS userName,
+(SELECT group_name FROM group_p WHERE id=(SELECT group_id FROM USER WHERE user.username=b.prospector_code)) AS groupName,
+SUM(CASE WHEN DATE_FORMAT(b.closing_time, '%Y')=#{year} 
+<if test="month != null">
+ and  DATE_FORMAT(b.closing_time, '%m')=#{month}
+ </if> 
+ THEN b.amount_of_money ELSE 0 END) as sumMoney,
+SUM(CASE WHEN DATE_FORMAT(b.closing_time, '%Y')=#{year} 
+<if test="month != null">
+ and  DATE_FORMAT(b.closing_time, '%m')=#{month}
+ </if> 
+ AND b.amount_of_money &lt;=${moneyType} THEN 1 ELSE 0 END) as nowCount,
+SUM(CASE WHEN DATE_FORMAT(b.risk_time, '%Y')=#{year} AND DATE_FORMAT(b.closing_time, '%Y')=#{year}
+<if test="month != null">
+ and  DATE_FORMAT(b.closing_time, '%m')=#{month}
+ </if> 
+  AND b.amount_of_money &lt;=${moneyType} THEN 1 ELSE 0 END )as countYear,
+SUM(CASE WHEN DATE_FORMAT(b.risk_time, '%Y')=#{year} AND DATE_FORMAT(b.closing_time, '%Y')=#{year}
+<if test="month != null">
+ and  DATE_FORMAT(b.closing_time, '%m')=#{month}
+ </if> 
+  AND b.amount_of_money &lt;=${moneyType} THEN b.amount_of_money ELSE 0 END )as moneyCount,
+SUM(CASE WHEN DATE_FORMAT(b.risk_time, '%Y')=#{year} AND DATE_FORMAT(b.risk_time, '%m')=DATE_FORMAT(b.closing_time, '%m') AND DATE_FORMAT(b.closing_time, '%Y')=#{year} 
+<if test="month != null">
+ and  DATE_FORMAT(b.risk_time, '%m')=#{month} and DATE_FORMAT(b.closing_time, '%m')=#{month}
+ </if> 
+ AND b.amount_of_money &lt;=${moneyType}  THEN 1 ELSE 0 END)as countMonth,
+SUM(CASE WHEN DATE_FORMAT(b.risk_time, '%Y')=#{year} AND DATE_FORMAT(b.risk_time, '%m')=DATE_FORMAT(b.closing_time, '%m') AND DATE_FORMAT(b.closing_time, '%Y')=#{year} 
+<if test="month != null">
+ and  DATE_FORMAT(b.risk_time, '%m')=#{month} and DATE_FORMAT(b.closing_time, '%m')=#{month}
+ </if> 
+ AND b.amount_of_money &lt;=${moneyType} THEN b.amount_of_money ELSE 0 END)as moneyMonth,
+SUM(CASE WHEN DATE_FORMAT(b.risk_time, '%Y')=#{year}AND DATE_FORMAT(b.closing_time, '%Y')=#{year} 
+<if test="month != null">
+ and  DATE_FORMAT(b.closing_time, '%m')=#{month}
+ </if> 
+AND b.amount_of_money &lt;=${moneyType}  THEN 1 ELSE 0 END) as countYearMonth,
+SUM(CASE WHEN DATE_FORMAT(b.risk_time, '%Y')=#{year}AND DATE_FORMAT(b.closing_time, '%Y')=#{year} 
+<if test="month != null">
+ and  DATE_FORMAT(b.closing_time, '%m')=#{month}
+ </if> 
+ AND b.amount_of_money &lt;=${moneyType} THEN b.amount_of_money ELSE 0 END) as  moneyYearMonth
+FROM USER AS a INNER JOIN (SELECT  *,(CASE 
+	WHEN case_type LIKE 'T%' THEN 'T' 
+	ELSE case_type END) AS my_case_type FROM closing_list_table) AS b ON b.prospector_code=a.username 
+GROUP BY userName ,group_id order by group_id asc
+	</select> 
+	<select id="getClosingListCaseType" resultType="com.picc.entity.ClosingListSummarySearchMessage">
+		SELECT CASE
+		WHEN case_type LIKE 'T%' THEN 'T'
+		ELSE case_type
+		END AS closingListCaseType
+		FROM closing_list_table
+		GROUP BY closingListCaseType;
+	</select>
+</mapper>
